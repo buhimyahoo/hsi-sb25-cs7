@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:submission7/bloc/note_bloc.dart';
 import 'package:submission7/bloc/note_event.dart';
 import 'package:submission7/bloc/note_state.dart';
+import 'package:submission7/model/note.dart';
+import 'package:submission7/widgets/custom_text.dart';
 
 class NoteScreen extends StatefulWidget {
   const NoteScreen({super.key});
@@ -12,11 +14,8 @@ class NoteScreen extends StatefulWidget {
 }
 
 class _NoteScreenState extends State<NoteScreen> {
-  late List<int> _selectedNotes;
-
   @override
   void initState() {
-    _selectedNotes = <int>[];
     BlocProvider.of<NoteBloc>(context).add(GetNotesEvent());
     super.initState();
   }
@@ -29,10 +28,11 @@ class _NoteScreenState extends State<NoteScreen> {
         builder: (context, state) {
           switch (state.status) {
             case NoteStates.initial:
-              return Center(child: Text('Assalamu\'alaikum'));
+              return Center(child: CustomBigText(text: 'Assalamu\'alaikum'));
             case NoteStates.loading:
               return Center(child: CircularProgressIndicator());
             case NoteStates.success:
+              return _NoteList(notes: state.notes);
             case NoteStates.empty:
               return Padding(
                 padding: const EdgeInsets.all(40),
@@ -86,7 +86,9 @@ class _NoteScreenState extends State<NoteScreen> {
         width: 64,
         child: FittedBox(
           child: FloatingActionButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.pushNamed(context, '/add_edit_note');
+            },
             foregroundColor: Colors.white,
             backgroundColor: Color(0xFF394675),
             shape: RoundedRectangleBorder(
@@ -102,10 +104,44 @@ class _NoteScreenState extends State<NoteScreen> {
 }
 
 class _NoteList extends StatelessWidget {
-  const _NoteList({super.key});
+  const _NoteList({required this.notes});
+
+  final List<Note> notes;
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: BouncingScrollPhysics(),
+        itemCount: notes.length,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 1,
+        ),
+        itemBuilder: (BuildContext context, int index) {
+          return Card(
+            shape: RoundedRectangleBorder(
+              side: BorderSide(style: BorderStyle.solid),
+              borderRadius: BorderRadiusGeometry.circular(8),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  CustomBigText(text: notes[index].title),
+                  SizedBox(height: 16),
+                  CustomSmallText(text: notes[index].content),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 }

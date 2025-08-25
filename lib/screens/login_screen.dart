@@ -89,7 +89,7 @@ class LoginScreen extends StatelessWidget {
                             ),
                             onPressed: () {
                               if (_formKey.currentState!.validate()) {
-                                Navigator.pushNamed(context, '/home_no_notes');
+                                Navigator.pushNamed(context, '/note_screen');
                               }
                             },
                             child: Text(

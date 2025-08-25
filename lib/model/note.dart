@@ -5,13 +5,10 @@ part 'note.g.dart';
 @HiveType(typeId: 1)
 class Note {
   @HiveField(0)
-  String id;
-
-  @HiveField(1)
   String title;
 
-  @HiveField(2)
+  @HiveField(1)
   String content;
 
-  Note({required this.id, required this.title, required this.content});
+  Note({required this.title, required this.content});
 }

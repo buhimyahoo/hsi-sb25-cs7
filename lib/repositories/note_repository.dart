@@ -3,6 +3,7 @@ import 'package:submission7/model/note.dart';
 
 class NoteRepository {
   NoteRepository() : _noteBox = Hive.box('Note');
+
   final Box<Note> _noteBox;
 
   Future<List<Note>> getAllNotes() async => _noteBox.values.toList();

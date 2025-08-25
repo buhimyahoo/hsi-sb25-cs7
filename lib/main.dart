@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:submission7/bloc/auth_bloc.dart';
 import 'package:submission7/bloc/note_bloc.dart';
 import 'package:submission7/model/note.dart';
 import 'package:submission7/repositories/note_repository.dart';
-import 'package:submission7/screens/add_note.dart';
+import 'package:submission7/screens/add_edit_note.dart';
 import 'package:submission7/screens/login_screen.dart';
 import 'package:submission7/screens/note_screen.dart';
 import 'package:submission7/screens/register_screen.dart';
@@ -19,14 +20,17 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key, required this.noteRepository}) : super(key: key);
+  const MyApp({super.key, required this.noteRepository});
 
   final NoteRepository noteRepository;
 
   @override
   Widget build(BuildContext context) {
     return MultiRepositoryProvider(
-      providers: [RepositoryProvider(create: (context) => noteRepository)],
+      providers: [
+        RepositoryProvider(create: (context) => noteRepository),
+        BlocProvider(create: (context) => AuthBloc()),
+      ],
       child: BlocProvider(
         create: (_) => NoteBloc(noteRepository),
         child: MaterialApp(
@@ -35,11 +39,11 @@ class MyApp extends StatelessWidget {
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
           ),
           debugShowCheckedModeBanner: false,
-          initialRoute: '/note_screen',
+          initialRoute: '/login',
           routes: {
             '/login': (context) => LoginScreen(),
             '/register': (context) => RegisterScreen(),
-            '/add_note': (context) => AddNote(),
+            '/add_edit_note': (context) => AddEditNote(),
             '/note_screen': (context) => NoteScreen(),
           },
         ),

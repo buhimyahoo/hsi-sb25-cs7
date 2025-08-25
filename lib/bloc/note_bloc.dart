@@ -4,9 +4,6 @@ import 'package:submission7/bloc/note_state.dart';
 import 'package:submission7/model/note.dart';
 import 'package:submission7/repositories/note_repository.dart';
 
-// part 'note_event.dart';
-// part 'note_state.dart';
-
 class NoteBloc extends Bloc<NoteEvent, NoteState> {
   final NoteRepository _noteRepository;
 
@@ -19,17 +16,17 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
 
   void _onGetNotesEvent(GetNotesEvent event, Emitter<NoteState> emit) async {
     emit(state.copyWith(status: NoteStates.loading));
-    final List<Note> _notes = await _getNotes();
-    _notes.isNotEmpty
-        ? emit(state.copyWith(status: NoteStates.success, notes: _notes))
+    final List<Note> notes = await _getNotes();
+    notes.isNotEmpty
+        ? emit(state.copyWith(status: NoteStates.success, notes: notes))
         : emit(state.copyWith(status: NoteStates.empty));
   }
 
   void _onAddNoteEvent(AddNoteEvent event, Emitter<NoteState> emit) async {
     emit(state.copyWith(status: NoteStates.loading));
-    await _addToNotes(event.note.id, event.note.title, event.note.content);
-    final List<Note> _notes = await _getNotes();
-    emit(state.copyWith(status: NoteStates.success, notes: _notes));
+    await _addToNotes(event.note.title, event.note.content);
+    final List<Note> notes = await _getNotes();
+    emit(state.copyWith(status: NoteStates.success, notes: notes));
   }
 
   void _onUpdateNoteEvent(
@@ -37,14 +34,9 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
     Emitter<NoteState> emit,
   ) async {
     emit(state.copyWith(status: NoteStates.loading));
-    await _updateNote(
-      event.index,
-      event.note.id,
-      event.note.title,
-      event.note.content,
-    );
-    final List<Note> _notes = await _getNotes();
-    emit(state.copyWith(status: NoteStates.success, notes: _notes));
+    await _updateNote(event.index, event.note.title, event.note.content);
+    final List<Note> notes = await _getNotes();
+    emit(state.copyWith(status: NoteStates.success, notes: notes));
   }
 
   void _onRemoveNoteEvent(
@@ -53,35 +45,32 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
   ) async {
     emit(state.copyWith(status: NoteStates.loading));
     await _removeFromNotes(event.indices);
-    final List<Note> _notes = await _getNotes();
-    _notes.isNotEmpty
-        ? emit(state.copyWith(status: NoteStates.success, notes: _notes))
+    final List<Note> notes = await _getNotes();
+    notes.isNotEmpty
+        ? emit(state.copyWith(status: NoteStates.success, notes: notes))
         : emit(state.copyWith(status: NoteStates.empty));
   }
 
   Future<List<Note>> _getNotes() async {
-    List<Note> _notes = [];
+    List<Note> notes = [];
     await _noteRepository.getAllNotes().then((value) {
-      _notes = value;
+      notes = value;
     });
-    return _notes;
+    return notes;
   }
 
-  Future<void> _addToNotes(String id, String title, String content) async {
-    await _noteRepository.addToBox(
-      Note(id: id, title: title, content: content),
-    );
+  Future<void> _addToNotes(String title, String content) async {
+    await _noteRepository.addToBox(Note(title: title, content: content));
   }
 
   Future<void> _updateNote(
     int index,
-    String newId,
     String newTitle,
     String newContent,
   ) async {
     await _noteRepository.updateNote(
       index,
-      Note(id: newId, title: newTitle, content: newContent),
+      Note(title: newTitle, content: newContent),
     );
   }
 
