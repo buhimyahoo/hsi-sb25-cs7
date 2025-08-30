@@ -56,6 +56,7 @@ class CustomSmallText extends StatelessWidget {
         fontWeight: FontWeight.w400,
         fontFamily: 'Inter',
       ),
+      maxLines: 7,
     );
   }
 }

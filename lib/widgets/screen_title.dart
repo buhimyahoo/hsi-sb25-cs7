@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:submission7/widgets/custom_text.dart';
+import 'package:submission8/widgets/custom_text.dart';
 
 class ScreenTitle extends StatelessWidget {
   const ScreenTitle({super.key, required this.title, required this.subTitle});

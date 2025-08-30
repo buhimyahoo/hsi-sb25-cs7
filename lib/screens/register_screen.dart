@@ -1,15 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:submission7/bloc/auth_bloc.dart';
-import 'package:submission7/bloc/auth_state.dart';
-import 'package:submission7/widgets/custom_nav_bar.dart';
-import 'package:submission7/widgets/custom_text.dart';
-import 'package:submission7/widgets/screen_title.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:submission8/bloc/auth/auth_bloc.dart';
+import 'package:submission8/bloc/auth/auth_event.dart';
+import 'package:submission8/bloc/auth/auth_state.dart';
+import 'package:submission8/widgets/custom_nav_bar.dart';
+import 'package:submission8/widgets/custom_text.dart';
+import 'package:submission8/widgets/screen_title.dart';
 
-class RegisterScreen extends StatelessWidget {
-  RegisterScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
+  @override
+  State<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,9 +38,10 @@ class RegisterScreen extends StatelessWidget {
           CircularProgressIndicator();
         }
         if (state.status == AuthStates.failure) {
-          CustomBigText(text: state.error.toString());
+          EasyLoading.showToast(state.error.toString());
         }
         if (state.status == AuthStates.success) {
+          EasyLoading.dismiss();
           Navigator.pushNamed(context, '/note_screen');
         }
       },
@@ -48,6 +68,7 @@ class RegisterScreen extends StatelessWidget {
                       CustomRegularText(text: 'Full Name'),
                       SizedBox(height: 8),
                       TextFormField(
+                        controller: nameController,
                         decoration: InputDecoration(
                           hint: Text('Example: John Doe'),
                           border: OutlineInputBorder(
@@ -66,6 +87,7 @@ class RegisterScreen extends StatelessWidget {
                       CustomRegularText(text: 'Email Address'),
                       SizedBox(height: 8),
                       TextFormField(
+                        controller: emailController,
                         decoration: InputDecoration(
                           hint: Text('Example: johndoe@gmail.com'),
                           border: OutlineInputBorder(
@@ -91,6 +113,7 @@ class RegisterScreen extends StatelessWidget {
                       CustomRegularText(text: 'Password'),
                       SizedBox(height: 12),
                       TextFormField(
+                        controller: passwordController,
                         obscureText: true,
                         decoration: InputDecoration(
                           hint: Text('********'),
@@ -121,7 +144,14 @@ class RegisterScreen extends StatelessWidget {
                               ),
                               onPressed: () {
                                 if (_formKey.currentState!.validate()) {
-                                  Navigator.pushNamed(context, '/note_screen');
+                                  context.read<AuthBloc>().add(
+                                    RegisterAuthEvent(
+                                      name: nameController.text,
+                                      email: emailController.text,
+                                      password: passwordController.text,
+                                    ),
+                                  );
+                                  // Navigator.pushNamed(context, '/note_screen');
                                 }
                               },
                               child: Text(
@@ -145,10 +175,6 @@ class RegisterScreen extends StatelessWidget {
                   height: 52,
                   child: InkWell(
                     onTap: () {
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(builder: (context) => LoginScreen()),
-                      // );
                       Navigator.pushNamed(context, '/login');
                     },
                     child: CustomRegularText(

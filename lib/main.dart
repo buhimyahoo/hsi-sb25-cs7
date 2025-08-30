@@ -1,52 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:submission7/bloc/auth_bloc.dart';
-import 'package:submission7/bloc/note_bloc.dart';
-import 'package:submission7/model/note.dart';
-import 'package:submission7/repositories/note_repository.dart';
-import 'package:submission7/screens/add_edit_note.dart';
-import 'package:submission7/screens/login_screen.dart';
-import 'package:submission7/screens/note_screen.dart';
-import 'package:submission7/screens/register_screen.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:submission8/bloc/auth/auth_bloc.dart';
+import 'package:submission8/bloc/note/note_bloc.dart';
+import 'package:submission8/screens/add_edit_note.dart';
+import 'package:submission8/screens/login_screen.dart';
+import 'package:submission8/screens/note_screen.dart';
+import 'package:submission8/screens/register_screen.dart';
+import 'package:submission8/services/note/note_api_service.dart';
+import 'package:submission8/services/user/user_api_service.dart';
 
 void main() async {
-  await Hive.initFlutter();
-  Hive.registerAdapter<Note>(NoteAdapter());
-
-  await Hive.openBox<Note>('Note');
-
-  runApp(MyApp(noteRepository: NoteRepository()));
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key, required this.noteRepository});
-
-  final NoteRepository noteRepository;
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MultiRepositoryProvider(
       providers: [
-        RepositoryProvider(create: (context) => noteRepository),
-        BlocProvider(create: (context) => AuthBloc()),
-      ],
-      child: BlocProvider(
-        create: (_) => NoteBloc(noteRepository),
-        child: MaterialApp(
-          title: 'HSI Notes',
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-          ),
-          debugShowCheckedModeBanner: false,
-          initialRoute: '/login',
-          routes: {
-            '/login': (context) => LoginScreen(),
-            '/register': (context) => RegisterScreen(),
-            '/add_edit_note': (context) => AddEditNote(),
-            '/note_screen': (context) => NoteScreen(),
-          },
+        BlocProvider<AuthBloc>(
+          create: (context) => AuthBloc(UserApiServiceImpl()),
         ),
+        BlocProvider<NoteBloc>(
+          create: (context) => NoteBloc(NoteApiServiceImpl()),
+        ),
+      ],
+      child: MaterialApp(
+        title: 'HSI Notes',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        ),
+        debugShowCheckedModeBanner: false,
+        initialRoute: '/login',
+        routes: {
+          '/login': (context) => LoginScreen(),
+          '/register': (context) => RegisterScreen(),
+          '/add_edit_note': (context) => AddEditNote(),
+          '/note_screen': (context) => NoteScreen(),
+        },
+        builder: EasyLoading.init(),
       ),
     );
   }

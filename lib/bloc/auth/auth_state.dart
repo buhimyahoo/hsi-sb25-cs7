@@ -1,9 +1,9 @@
-import 'package:submission7/model/user.dart';
+import 'package:submission8/model/user_model.dart';
 
 enum AuthStates { initial, loading, success, failure }
 
 class AuthState {
-  final User? user;
+  final UserModel? user;
   final AuthStates status;
   final Exception? error;
 
@@ -11,7 +11,7 @@ class AuthState {
 
   factory AuthState.initial() => AuthState();
 
-  AuthState copyWith({User? user, AuthStates? status, Exception? error}) {
+  AuthState copyWith({UserModel? user, AuthStates? status, Exception? error}) {
     return AuthState(
       error: error,
       status: status ?? this.status,

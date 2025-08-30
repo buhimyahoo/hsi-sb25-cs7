@@ -1,13 +1,18 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:submission7/bloc/note_bloc.dart';
-import 'package:submission7/bloc/note_event.dart';
-import 'package:submission7/model/note.dart';
-import 'package:submission7/widgets/custom_text.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:submission8/bloc/note/note_bloc.dart';
+import 'package:submission8/bloc/note/note_event.dart';
+import 'package:submission8/bloc/note/note_state.dart';
+import 'package:submission8/model/note_arguments.dart';
+import 'package:submission8/model/note_model.dart';
+import 'package:submission8/widgets/bottom_navigation.dart';
+import 'package:submission8/widgets/custom_text.dart';
 
 class AddEditNote extends StatefulWidget {
-  const AddEditNote({super.key});
+  const AddEditNote({super.key, this.note});
+
+  final NoteModel? note;
 
   @override
   State<AddEditNote> createState() => _AddEditNoteState();
@@ -19,6 +24,8 @@ class _AddEditNoteState extends State<AddEditNote> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
 
+  bool addNewNote = false;
+
   @override
   void dispose() {
     _titleController.dispose();
@@ -28,188 +35,114 @@ class _AddEditNoteState extends State<AddEditNote> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        actions: <Widget>[
-          IconButton(
-            tooltip: 'Save note',
-            icon: Icon(Icons.save),
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                BlocProvider.of<NoteBloc>(context).add(
-                  AddNoteEvent(
-                    Note(
-                      title: _titleController.text,
-                      content: _contentController.text,
-                    ),
+    final args = ModalRoute.of(context)!.settings.arguments as NoteArguments;
+    final String existingId = args.id;
+    _titleController.text = args.title;
+    _contentController.text = args.content;
+    if (existingId.isEmpty) {
+      addNewNote = true;
+    }
+
+    return BlocListener<NoteBloc, NoteState>(
+      listener: (context, state) {
+        if (state.status == NoteStates.loading) {
+          CircularProgressIndicator();
+        }
+        if (state.status == NoteStates.failure) {
+          EasyLoading.showToast(state.error.toString());
+        }
+        if (state.status == NoteStates.success) {
+          EasyLoading.dismiss();
+          Navigator.pushNamed(context, '/note_screen');
+        }
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextFormField(
+                        controller: _titleController,
+                        decoration: InputDecoration(
+                          hint: CustomBigText(text: 'Title'),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter note title';
+                          }
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: _contentController,
+                        decoration: InputDecoration(
+                          hint: Text('Type your note here'),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        maxLines: 10,
+                        keyboardType: TextInputType.multiline,
+                      ),
+                      SizedBox(height: 16),
+                    ],
                   ),
-                );
-                Navigator.pushNamed(context, '/note_screen');
-              }
-            },
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextFormField(
-                      controller: _titleController,
-                      decoration: InputDecoration(
-                        hint: CustomBigText(text: 'Title'),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter note title';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 16),
-                    TextFormField(
-                      controller: _contentController,
-                      decoration: InputDecoration(
-                        hint: Text('Type your note here'),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      maxLines: 10,
-                      keyboardType: TextInputType.multiline,
-                    ),
-                    SizedBox(height: 16),
-                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
-      bottomNavigationBar: BottomSection(
-        title: _titleController.text,
-        content: _contentController.text,
-      ),
-    );
-  }
-}
 
-class BottomSection extends StatelessWidget {
-  const BottomSection({super.key, required this.title, this.content});
-
-  final String title;
-  final String? content;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(border: Border(top: BorderSide())),
-      child: SafeArea(
-        child: Row(
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 16),
-                child: Text('Last edited on 19.30'),
-              ),
-            ),
-            GestureDetector(
-              onTap: () {
-                showModalBottomSheet<void>(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return SizedBox(
-                      height: 192,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                InkWell(
-                                  child: Icon(Icons.close),
-                                  onTap: () => Navigator.pop(context),
-                                ),
-                              ],
-                            ),
-
-                            SizedBox(
-                              height: 56,
-                              child: InkWell(
-                                onTap: () {
-                                  BlocProvider.of<NoteBloc>(context).add(
-                                    AddNoteEvent(
-                                      Note(
-                                        title: title,
-                                        content: content ?? '',
-                                      ),
-                                    ),
-                                  );
-                                  Navigator.pop(context);
-                                },
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    Icon(Icons.done, size: 24),
-                                    SizedBox(width: 12),
-                                    CustomRegularText(text: 'Save Note'),
-                                  ],
-                                ),
-                              ),
-                            ),
-
-                            SizedBox(height: 8),
-
-                            SizedBox(
-                              height: 56,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  Icon(
-                                    CupertinoIcons.trash,
-                                    size: 24,
-                                    color: Colors.red,
-                                  ),
-                                  SizedBox(width: 12),
-                                  Text(
-                                    'Delete Note',
-                                    style: TextStyle(
-                                      height: 1.4,
-                                      color: Colors.red,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      fontFamily: 'Inter',
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-              child: Container(
-                height: 48,
-                width: 48,
-                color: Color(0xFF394675),
-                child: Icon(Icons.more_horiz, size: 24, color: Colors.white),
-              ),
-            ),
-          ],
+        bottomNavigationBar: BottomNavigation(
+          key: widget.key,
+          updatedAt: widget.note?.updatedAt,
+          onTap: () {
+            if (_formKey.currentState?.validate() == true) {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                builder: (context) {
+                  return BottomActionSection(
+                    key: widget.key,
+                    id: widget.note!.id,
+                    title: _titleController.text,
+                    content: _contentController.text,
+                  );
+                },
+              );
+            }
+          },
+          onCreate: () {
+            if (addNewNote) {
+              context.read<NoteBloc>().add(
+                CreateNoteEvent(
+                  title: _titleController.text,
+                  content: _contentController.text,
+                ),
+              );
+            } else {
+              context.read<NoteBloc>().add(
+                UpdateNoteEvent(
+                  id: existingId,
+                  title: _titleController.text,
+                  content: _contentController.text,
+                ),
+              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: const Text('Note updated')));
+            }
+          },
         ),
       ),
     );
